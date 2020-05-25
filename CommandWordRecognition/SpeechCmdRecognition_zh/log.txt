@@ -1,0 +1,122 @@
+##############################日志#########################################
+
+-------------------------------2020.1.4-------------------------------------
+1.重新配置了下.vimrc文件;
+2.kws中文数据：
+    1)train:001-069、090-098，max_duration=22.55s(360795)，min_duration=0.086s(1371)，avg_duration=2.846s(45532);
+    2)dev:070-079，max_duration=9.28(148480)，min_duration=0.0217s(347)，avg_duration=2.45s(39262);
+    3)test:080-089，max_duration=21.057s(336914)，min_duration=0.747(11953)，avg_duration=5.376s(86022);
+3.修改iLen = 45000训练，dev使用全部，test使用080进行测试，为了进行一个文件一个文件的测试，查看识别错误的是不是时长较长的样本;模型保存名称model-attRNN45000.hdf5，dev训练时的最高准确率0.89648;
+    1)训练集：0.8857933291770573
+    2)验证集：0.8636067708333334
+    3)测试集080：0.7350000143051147
+4.发现/home/linyuqin/kws/KeywordSpotting的项目是在https://github.com/friday27/KeywordSpotting的基础上修改的，
+    data:绝对路径/home/linyuqin/corpus/lyq/aishell/data_aishell/wav/、/home/linyuqin/corpus/KWS/kws_data
+    train.csv:120509个样本
+    validation.csv:17270个样本
+    train10.csv:11个样本
+
+-------------------------------2020.1.5-------------------------------------
+1.修改iLen = 40000训练，dev使用全部，test使用080进行测试，模型保存名称model-attRNN40000.hdf5i，dev训练时的最高准确率为0.91146;
+    1)训练集：0.8857933291770573
+    2)验证集：0.8733723958333334
+    3)测试集080：0.9449999928474426，平均时长1.68s
+    4)测试集081：0.2175000011920929，平均时长5.18s
+
+-------------------------------2020.1.6-------------------------------------
+1.使用soxi命令查看.wav文件的属性，发现081-098的.wav文件采样率都是48kHz，而001-080的.wav文件采样率都是16kHz;
+2.将081-098用shell程序的形式，将采样率48kHz转换成16kHz;
+3.由于之前训练集用到090-098，这部分采样率有问题，然后将模型备份为model-attRNN40000-backup.hdf5，再训练一个iLen=40000的模型;
+
+-------------------------------2020.1.7-------------------------------------
+1.将采样率修改为16kHz后，再加入aishell的test目录下的数据集为unknown参加训练、验证、测试;
+2.数据集改变后的大小：train(30387)，dev(4153)，test(4880);
+3.iLen=40000进行训练，训练时dev的最高acc=0.88892，在test上的acc=0.886924;
+4.模型保存为model-attRNN40000.hdf5
+5.使用iLen=42000进行训练，训练时dev的最高acc=0.89718，在test上的acc=0.73165-->iLen=42000不行
+6.写了一个Rename.py程序，将train,test,dev中不规范的命名方式修改为规范的命名方式，如001_6_utterance.wav修改为001_006_utterance.wav，001_87_seg.txt修改为001_087_seg.txt
+
+-------------------------------2020.1.8-------------------------------------
+1.目前数据有几个问题：
+    1)只有utterance.wav文件，且多数.wav是正常说话，少部分是静音，没有对应的seg.txt文件，这样文件总共有326个(找标注组标注);
+    2)只有seg.txt文件，但没有对于的utterance.wav文件，这些是无用的txt，总共900多(之前是程序跳过，现在把其删除了);
+    3)094有400-67=333个文件标成了093_068_utterance.wav文件形式(使用程序修改好了)
+2.服务器GPU资源使用出现问题，师姐那边也是，后来服务器重启，iLen=40000模型才成功能跑;
+3.与师姐商量接下来怎么做(HMM，语言模型，kaldi);
+4.程序中加入混淆矩阵，去评判模型的命令词与非命令词的识别情况;
+
+-------------------------------2020.1.9-------------------------------------
+1.将标注好的语音上传到Linux上，并将其复制到项目文件的kws_data下，将原kws_data下的数据文件名改成train_backup等，学习混淆矩阵;
+2.程序运行，发现有少数几个标注错误，手动修改过来;077_141~143三个文件的.wav语音为：小慧，降低音量，而命令词为：小慧，调低音量，这是录取.wav文件时饭的错误，我未删除，将标签修改成了`小慧，调低音量`参与训练;
+kws_data/train/051/051_301_seg.txt  你好，小慧
+kws_data/train/057/057_121_seg.txt 慧，给我讲个故事
+kws_data/train/062/062_208_seg.txt 天，天津大学哪些专业强
+kws_data/train/062/062_235_seg.txt 天，智算学部有什么特色
+kws_data/train/062/062_256_seg.txt 天，怎么语音唤醒
+kws_data/train/062/062_258_seg.txt 天，怎么语音唤醒
+kws_data/train/062/062_262_seg.txt 天，我想去机械学院
+kws_data/train/062/062_279_seg.txt 天，天大有哪些特色
+kws_data/train/062/062_280_seg.txt 天，天大有哪些特色
+kws_data/train/062/062_298_seg.txt 天，介绍一下你自己
+kws_data/dev/077/077_141_seg.txt 小慧，降低音量
+kws_data/dev/077/077_142_seg.txt 小慧，降低音量
+kws_data/dev/077/077_143_seg.txt 小慧，降低音量
+UNK:kws_data/dev/077/077_217_seg.txt
+kws_data/dev/077/077_268_seg.txt 小天，带我去机械学
+kws_data/dev/077/077_347_seg.txt 小慧，今天有风
+UNK:kws_data/dev/079/079_132_seg.txt
+3.使用程序整理数据，并将没有.wav的冗余seg.txt文件删除;整理后的数据还会用min_duration=0.3s，max_duration=6s进行过滤，再加入unknown数据集，最终
+    1)train:29241，unknown:3538;
+    2)dev:4008，unknown:932;
+    3)test:4827，unknown:983;
+    4)总共:38076。
+4.使用整理后的数据，iLen=40k进行训练，训练过程中，验证集的最高acc=0.97152，模型保存为model-attRNN40000gai.hdf5，测试时：
+    1)dev的acc=0.9569;
+    2)test的acc=4616/4827=0.9563;
+5.将n_mels=160修改为n_mels=80进行训练，训练过程中，验证集的最高acc=0.92843，模型保存为model-attRNN40000-nmels80.hdf5，测试时：
+    1)dev的acc=0.9080141129032258;
+    2)test的acc=4515/4827=0.9353635798632691
+    3)参数量：Total params: 1,818,761、Trainable params: 727,035、Non-trainable params: 1,091,726
+
+-------------------------------2020.1.10-------------------------------------
+1.make编译kaldi的src出错，使用make clean、make进行重新编译;
+2.测试HDF5_FILE_LOCK，测试3次，都不会出现之前的报错问题;
+3.搭建kaldi环境还是没有成功，出错原因：
+    1)根据网址，https://sourceforge.net/p/kaldi/discussion/1355348/thread/5b275ab6/，用命令：ldd
+./matrix/matrix-lib-test，查看问题;
+./matrix/matrix-lib-test: /lib64/libstdc++.so.6: version `CXXABI_1.3.8' not
+found (required by ./matrix/matrix-lib-test)
+./matrix/matrix-lib-test: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.20' not
+found (required by ./matrix/matrix-lib-test)
+        linux-vdso.so.1 =>  (0x00007fff7cfdf000)
+        libfst.so.10 =>
+/home/sanghongbao/kaldi_trunk/tools/openfst-1.6.7/lib/libfst.so.10
+(0x00007f93d44c0000)
+        libmkl_intel_lp64.so =>
+/opt/intel/mkl/lib/intel64/libmkl_intel_lp64.so (0x00007f93d3972000)
+        libmkl_core.so => /opt/intel/mkl/lib/intel64/libmkl_core.so
+(0x00007f93cf7e6000)
+        libmkl_sequential.so =>
+/opt/intel/mkl/lib/intel64/libmkl_sequential.so (0x00007f93ce23a000)
+        libdl.so.2 => /lib64/libdl.so.2 (0x00007f93ce036000)
+        libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f93cde1a000)
+        libm.so.6 => /lib64/libm.so.6 (0x00007f93cdb18000)
+        libstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007f93cd811000)
+        libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007f93cd5fb000)
+        libc.so.6 => /lib64/libc.so.6 (0x00007f93cd22e000)
+        /lib64/ld-linux-x86-64.so.2 (0x00007f93d4cf9000)
+    2)具体原因是：需要的是CXXABI_1.3.8和GLIBCXX_3.4.20，但是系统是CXXABI_1.3.7和GLIBCXX_3.4.19，而libstdc++.so.6.0.20有需要的版本，但是操作需要权限，费了九牛二虎之力也没弄好
+
+-------------------------------2020.1.12-------------------------------------
+1.将kaldi执行make命令报错的问题解决(cuilinhe帮忙)，初步成功搭建好kaldi环境,打算用yesno样例测试一下;
+2.看了下CTC例子的相关程序https://github.com/philipperemy/tensorflow-ctc-speech-recognition，并查找到其数据集使用的是VCTK
+Corpus，该数据集在/home/linyuqin/corpus/lyq/VCTK-Corpus/下
+
+-------------------------------2020.1.13-------------------------------------
+1.使用yesno样例测试kaldi环境：
+    测试前：conf  input  local  path.sh  run.sh  steps  utilis
+    测试失败
+2.kaldi环境
+    /home/linyuqin/tools/kaldi：没有安装IRSTLM，其他编译都是成功
+    /home/sanghongbao/kaldi_trunk：报错ERROR: FstHeader::Read: Bad FST header: standard input
+
