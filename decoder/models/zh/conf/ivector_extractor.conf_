@@ -1,0 +1,11 @@
+--splice-config=($ROOT$)/models/zh/conf/splice.conf
+--cmvn-config=($ROOT$)/models/zh/conf/online_cmvn.conf
+--lda-matrix=($ROOT$)/models/zh/res/ivector_extractor/final.mat
+--global-cmvn-stats=($ROOT$)/models/zh/res/ivector_extractor/global_cmvn.stats
+--diag-ubm=($ROOT$)/models/zh/res/ivector_extractor/final.dubm
+--ivector-extractor=($ROOT$)/models/zh/res/ivector_extractor/final.ie
+--num-gselect=5
+--min-post=0.025
+--posterior-scale=0.1
+--max-remembered-frames=1000
+--max-count=100

@@ -1,0 +1,55 @@
+port = 9800
+threads = 20
+lang = zh-CN
+
+trans-model = /home/sanghongbao/decoder/models/zh/res/final.mdl
+fst-path = /home/sanghongbao/decoder/models/zh/res/HCLG.fst
+dict-path = /home/sanghongbao/decoder/models/zh/res/words.txt
+phone-path = /home/sanghongbao/decoder/models/zh/res/phones.txt
+mfcc-config = /home/sanghongbao/decoder/models/zh/conf/mfcc.conf
+ivector-extraction-config = /home/sanghongbao/decoder/models/zh/conf/ivector_extractor.conf
+online-pitch-config = /home/sanghongbao/decoder/models/zh/conf/online_pitch.conf
+
+add-pitch = 1
+
+num-nbest = 3
+num-phone-alignment = 3
+#do-phone-alignment = 1
+
+
+beam            = 15.0
+lattice-beam    = 8.0
+acoustic-scale  = 1.5
+inverse-scale   = 1
+lmwt-scale      = 1.0
+
+chunk-length-in-secs    = 0.24
+frames-per-chunk        = 51
+frame-subsampling-factor= 3
+silence-phones          = 1:2:3:4:5:6:7:8:9:10:11:12:13:14:15:16:17:18:19:20
+
+log_save = 1
+log-dir = /home/sanghongbao/decoder/logs/zh/
+log-file-num = 30
+#license_type = offline
+license_type = online
+#license = /home/sanghongbao/decoder/models/license.txt
+auth_url = http://xz502.tpddns.cn:30828
+verbose = 10
+drop-unk = true
+
+
+[lm]
+#lm-fst = /home/sanghongbao/decoder/models/zh/res/G.fst
+#big-lm-const-arpa = /home/sanghongbao/decoder/models/zh/res/G.carpa
+#rescore-timeout-ms = 1000
+#rescore-max-latsize = 30000
+#rescore-max-1stpass-ms = 3000
+
+
+[post]
+do-post = 0
+do-post-mid = 0
+ip      = 127.0.0.1
+port    = 8001
+
